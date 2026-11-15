@@ -53,8 +53,10 @@ async function rateLimitKey(
 
 export async function handleLogin(
   request: Request,
-  db: D1Database
+  db: D1Database,
+  rateLimiter: RateLimit
 ): Promise<Response> {
+
   if (request.method !== "POST") {
     return errorResponse("Method not allowed", 405);
   }
@@ -127,6 +129,39 @@ if (new TextEncoder().encode(raw).byteLength > 4096) {
     new TextEncoder().encode(password).length > 1024
   ) {
     return errorResponse("Invalid request", 400);
+  }
+
+  
+  // Cloudflare account-level rate limiting
+  const emailBytes = new TextEncoder().encode(email);
+  const emailDigest = await crypto.subtle.digest(
+    "SHA-256",
+    emailBytes
+  );
+
+  const emailKey = Array.from(
+    new Uint8Array(emailDigest)
+  ).map(
+    b => b.toString(16).padStart(2, "0")
+  ).join("");
+
+  const { success } = await rateLimiter.limit({
+    key: `login:${emailKey}`
+  });
+
+  if (!success) {
+    return new Response(
+      JSON.stringify({
+        error: "Too many login requests"
+      }),
+      {
+        status: 429,
+        headers: {
+          ...headers,
+          "Retry-After": "60"
+        }
+      }
+    );
   }
 
   const key = await rateLimitKey(request, email);
