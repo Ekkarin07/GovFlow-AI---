@@ -11,88 +11,166 @@ interface LoginUser {
   password_hash: string;
 }
 
+const MAX_ATTEMPTS = 5;
+const WINDOW_SECONDS = 15 * 60;
+
+const headers = {
+  "Cache-Control": "no-store",
+  "Content-Type": "application/json"
+};
+
+function errorResponse(
+  message: string,
+  status: number
+): Response {
+  return Response.json(
+    { error: message },
+    { status, headers }
+  );
+}
+
+async function rateLimitKey(
+  request: Request,
+  email: string
+): Promise<string> {
+  const ip =
+    request.headers.get("CF-Connecting-IP") ??
+    "unknown";
+
+  const data = new TextEncoder().encode(
+    `${ip.toLowerCase()}:${email}`
+  );
+
+  const hash = await crypto.subtle.digest(
+    "SHA-256",
+    data
+  );
+
+  return Array.from(new Uint8Array(hash))
+    .map(b => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 export async function handleLogin(
   request: Request,
   db: D1Database
 ): Promise<Response> {
-  const headers = {
-    "Cache-Control": "no-store",
-    "Content-Type": "application/json"
-  };
-
   if (request.method !== "POST") {
-    return new Response(
-      JSON.stringify({ error: "Method not allowed" }),
-      { status: 405, headers }
-    );
+    return errorResponse("Method not allowed", 405);
   }
 
-  // Reject cross-origin browser requests
   const origin = request.headers.get("Origin");
 
-  if (!origin || origin !== new URL(request.url).origin) {
-    return new Response(
-      JSON.stringify({ error: "Forbidden" }),
-      { status: 403, headers }
-    );
+  if (
+    !origin ||
+    origin !== new URL(request.url).origin
+  ) {
+    return errorResponse("Forbidden", 403);
   }
+
+  const contentType =
+    request.headers.get("Content-Type") ?? "";
 
   if (
-    !request.headers.get("Content-Type")
-      ?.toLowerCase()
+    !contentType.toLowerCase()
       .startsWith("application/json")
   ) {
-    return new Response(
-      JSON.stringify({ error: "Unsupported media type" }),
-      { status: 415, headers }
+    return errorResponse(
+      "Unsupported media type",
+      415
     );
   }
 
-  const bodyText = await request.text();
+  const contentLength =
+    Number(request.headers.get("Content-Length"));
 
-  if (bodyText.length > 4096) {
-    return new Response(
-      JSON.stringify({ error: "Invalid request" }),
-      { status: 400, headers }
-    );
+  if (
+    contentLength > 4096
+  ) {
+    return errorResponse("Invalid request", 400);
+  }
+
+  const raw = await request.text();
+
+  if (raw.length > 4096) {
+    return errorResponse("Invalid request", 400);
   }
 
   let body: unknown;
 
   try {
-    body = JSON.parse(bodyText);
+    body = JSON.parse(raw);
   } catch {
-    return new Response(
-      JSON.stringify({ error: "Invalid JSON" }),
-      { status: 400, headers }
-    );
+    return errorResponse("Invalid JSON", 400);
   }
 
   if (
+    !body ||
     typeof body !== "object" ||
-    body === null ||
     !("email" in body) ||
     !("password" in body) ||
     typeof body.email !== "string" ||
     typeof body.password !== "string"
   ) {
-    return new Response(
-      JSON.stringify({ error: "Invalid request" }),
-      { status: 400, headers }
-    );
+    return errorResponse("Invalid request", 400);
   }
 
   const email = body.email.trim().toLowerCase();
   const password = body.password;
 
   if (
+    !email ||
     email.length > 254 ||
-    password.length > 1024 ||
-    !email.includes("@")
+    !email.includes("@") ||
+    !password ||
+    new TextEncoder().encode(password).length > 1024
+  ) {
+    return errorResponse("Invalid request", 400);
+  }
+
+  const key = await rateLimitKey(request, email);
+  const now = Math.floor(Date.now() / 1000);
+
+  // Count attempts before checking credentials.
+  const attempt = await db.prepare(
+    `INSERT INTO auth_login_attempts
+       (key, attempts, window_until)
+     VALUES (?, 1, ?)
+     ON CONFLICT(key) DO UPDATE SET
+       attempts = CASE
+         WHEN window_until <= ?
+         THEN 1
+         ELSE attempts + 1
+       END,
+       window_until = CASE
+         WHEN window_until <= ?
+         THEN ?
+         ELSE window_until
+       END
+     RETURNING attempts`
+  ).bind(
+    key,
+    now + WINDOW_SECONDS,
+    now,
+    now,
+    now + WINDOW_SECONDS
+  ).first<{ attempts: number }>();
+
+  if (
+    !attempt ||
+    attempt.attempts > MAX_ATTEMPTS
   ) {
     return new Response(
-      JSON.stringify({ error: "Invalid request" }),
-      { status: 400, headers }
+      JSON.stringify({
+        error: "Too many login attempts"
+      }),
+      {
+        status: 429,
+        headers: {
+          ...headers,
+          "Retry-After": String(WINDOW_SECONDS)
+        }
+      }
     );
   }
 
@@ -105,19 +183,24 @@ export async function handleLogin(
   ).bind(email).first<LoginUser>();
 
   const valid = user
-    ? await verifyPassword(password, user.password_hash)
+    ? await verifyPassword(
+        password,
+        user.password_hash
+      )
     : false;
 
   if (!valid || !user) {
-    return new Response(
-      JSON.stringify({
-        error: "Invalid email or password"
-      }),
-      { status: 401, headers }
+    return errorResponse(
+      "Invalid email or password",
+      401
     );
   }
 
   const token = await createSession(db, user.id);
+
+  await db.prepare(
+    "DELETE FROM auth_login_attempts WHERE key = ?"
+  ).bind(key).run();
 
   return new Response(
     JSON.stringify({ success: true }),
