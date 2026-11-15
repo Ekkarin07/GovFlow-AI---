@@ -1,13 +1,22 @@
 
+import {
+  readSessionCookie,
+  getSessionUser
+} from "./server/auth";
+
 interface Env {
   DB: D1Database;
   ASSETS: Fetcher;
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(
+    request: Request,
+    env: Env
+  ): Promise<Response> {
     const url = new URL(request.url);
 
+    // Test database connectivity
     if (url.pathname === "/health") {
       const result = await env.DB
         .prepare("SELECT 1 AS ok")
@@ -16,10 +25,52 @@ export default {
       return Response.json({
         status: result?.ok === 1 ? "ok" : "error",
         service: "GovFlow AI",
-        database: result?.ok === 1 ? "connected" : "error"
+        database:
+          result?.ok === 1 ? "connected" : "error"
       });
     }
 
+    // Check authenticated user
+    if (
+      url.pathname === "/api/v1/me" &&
+      request.method === "GET"
+    ) {
+      const token = readSessionCookie(request);
+
+      if (!token) {
+        return Response.json(
+          { error: "Unauthorized" },
+          {
+            status: 401,
+            headers: { "Cache-Control": "no-store" }
+          }
+        );
+      }
+
+      const user = await getSessionUser(
+        env.DB,
+        token
+      );
+
+      if (!user) {
+        return Response.json(
+          { error: "Invalid or expired session" },
+          {
+            status: 401,
+            headers: { "Cache-Control": "no-store" }
+          }
+        );
+      }
+
+      return Response.json(
+        { user },
+        {
+          headers: { "Cache-Control": "no-store" }
+        }
+      );
+    }
+
+    // Other APIs are not enabled yet
     if (url.pathname.startsWith("/api/")) {
       return Response.json(
         {
