@@ -8,7 +8,7 @@
 
 const ITERATIONS = 600_000;
 const SESSION_SECONDS = 60 * 60 * 8;
-const COOKIE_NAME = "govflow_session";
+const COOKIE_NAME = "__Host-govflow_session";
 
 const encoder = new TextEncoder();
 
