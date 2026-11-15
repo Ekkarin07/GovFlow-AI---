@@ -6,9 +6,6 @@ import {
 
 import { handleLogin } from "./server/login";
 
-interface Env {
-  DB: D1Database;
-  ASSETS: Fetcher;
 }
 interface Env {
   DB: D1Database;
@@ -35,6 +32,11 @@ export default {
         database:
           result?.ok === 1 ? "connected" : "error"
       });
+    }
+
+    // Login API
+    if (url.pathname === "/api/v1/auth/login") {
+      return handleLogin(request, env.DB);
     }
 
     // Check authenticated user
