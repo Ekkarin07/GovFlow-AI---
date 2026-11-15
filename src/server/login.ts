@@ -92,9 +92,9 @@ export async function handleLogin(
 
   const raw = await request.text();
 
-  if (raw.length > 4096) {
-    return errorResponse("Invalid request", 400);
-  }
+if (new TextEncoder().encode(raw).byteLength > 4096) {
+  return errorResponse("Invalid request", 400);
+}
 
   let body: unknown;
 
@@ -105,8 +105,9 @@ export async function handleLogin(
   }
 
   if (
-    !body ||
-    typeof body !== "object" ||
+  !body ||
+  typeof body !== "object" ||
+  Array.isArray(body) ||
     !("email" in body) ||
     !("password" in body) ||
     typeof body.email !== "string" ||
