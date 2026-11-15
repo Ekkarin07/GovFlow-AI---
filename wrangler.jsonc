@@ -10,5 +10,12 @@
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/api/*", "/health"]
-  }
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "govflow-db",
+      "database_id": "22f8343b-7984-462d-97ef-8261fa6b5b6c"
+    }
+  ]
 }
