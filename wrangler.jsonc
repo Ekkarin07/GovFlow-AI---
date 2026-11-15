@@ -28,7 +28,6 @@
       }
     }
   ],
-  ],
   "env": {
     "staging": {
       "workers_dev": true,
@@ -51,4 +50,4 @@
       ]
     }
   }
-
+}
