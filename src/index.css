@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: 'TH Sarabun New';
+  src: url('/assets/fonts/THSarabunNew.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'TH Sarabun New';
+  src: url('/assets/fonts/THSarabunNew-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'TH Sarabun New';
+  src: url('/assets/fonts/THSarabunNew-Italic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'TH Sarabun New';
+  src: url('/assets/fonts/THSarabunNew-BoldItalic.ttf') format('truetype');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@layer base {
+  :root {
+    --brand-purple: #6D28D9;
+    --brand-purple-hover: #5B21B6;
+    --brand-purple-soft: #F5F3FF;
+    --brand-purple-dark: #4C1D95;
+    
+    --brand-blue: #2563EB;
+    --brand-blue-hover: #1D4ED8;
+    --brand-blue-soft: #EFF6FF;
+    
+    --brand-yellow: #FACC15;
+    --brand-yellow-soft: #FEF9C3;
+    --brand-yellow-strong: #EAB308;
+    
+    --surface: #FFFFFF;
+    --app-bg: #F8FAFC;
+    --surface-muted: #F1F5F9;
+    
+    --text-primary: #0F172A;
+    --text-secondary: #475569;
+    --text-muted: #64748B;
+    --border: #E2E8F0;
+    
+    --success: #15803D;
+    --success-soft: #DCFCE7;
+    --warning: #B45309;
+    --warning-soft: #FEF3C7;
+    --danger: #B91C1C;
+    --danger-soft: #FEE2E2;
+    --info: #1D4ED8;
+    --info-soft: #DBEAFE;
+  }
+}
+
+/* Authentic Official Thai Sarabun Typography (TH Sarabun New) */
+.font-sarabun {
+  font-family: 'TH Sarabun New', 'TH Sarabun PSK', sans-serif;
+  font-synthesis: none;
+}
+
+/* Custom scrollbars for clean desktop UI */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}

@@ -1,0 +1,8 @@
+{
+  "name": "GovFlow AI - ระบบบริหารเอกสารราชการและเรื่องงาน",
+  "description": "ระบบอัจฉริยะเชื่อมโยงเอกสารราชการและการดำเนินงาน From Documents to Done พร้อมระบบแม่แบบเอกสารสารบรรณ การตรวจรับรอง และภารกิจ",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
