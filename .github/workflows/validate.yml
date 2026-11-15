@@ -29,8 +29,11 @@ jobs:
       - name: Generate Cloudflare Worker Types
         run: bunx wrangler types
 
-      - name: Check TypeScript
-        run: bunx tsc --noEmit
+      - name: Check Frontend TypeScript
+        run: bunx tsc --noEmit -p tsconfig.json
+
+      - name: Check Worker TypeScript
+        run: bunx tsc --noEmit -p tsconfig.worker.json
 
       - name: Build frontend
         run: bun run build
