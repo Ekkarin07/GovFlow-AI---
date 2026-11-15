@@ -26,6 +26,9 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Generate Cloudflare Worker Types
+        run: bunx wrangler types
+
       - name: Check TypeScript
         run: bunx tsc --noEmit
 
