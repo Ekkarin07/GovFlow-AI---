@@ -27,6 +27,28 @@
         "period": 60
       }
     }
-  ]
-}
+  ],
+  ],
+  "env": {
+    "staging": {
+      "workers_dev": true,
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "govflow-db-test",
+          "database_id": "eb58c7bd-63df-4177-b0a0-197b2dec44a0"
+        }
+      ],
+      "ratelimits": [
+        {
+          "name": "LOGIN_RATE_LIMITER",
+          "namespace_id": "1002",
+          "simple": {
+            "limit": 10,
+            "period": 60
+          }
+        }
+      ]
+    }
+  }
 
