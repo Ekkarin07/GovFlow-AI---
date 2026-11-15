@@ -24,5 +24,11 @@
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "exclude": ["dist"]
+  "exclude": [
+  "dist",
+  "worker-configuration.d.ts",
+  "src/worker.ts",
+  "src/server/auth.ts",
+  "src/server/login.ts"
+]
 }
