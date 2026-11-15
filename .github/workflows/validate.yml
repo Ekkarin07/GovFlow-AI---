@@ -1,0 +1,36 @@
+
+name: Validate GovFlow AI
+
+on:
+  push:
+    branches:
+      - cloudflare-migration
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Check TypeScript
+        run: bunx tsc --noEmit
+
+      - name: Build frontend
+        run: bun run build
+
+      - name: Validate Cloudflare Worker bundle
+        run: bunx wrangler deploy --dry-run
