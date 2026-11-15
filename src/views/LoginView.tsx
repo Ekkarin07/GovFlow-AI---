@@ -47,9 +47,15 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
   useEffect(() => {
     fetch('/api/v1/departments')
-      .then((r) => r.json())
-      .then((res) => {
-        if (Array.isArray(res.data)) {
+      
+    .then((r) => r.json() as Promise<unknown>)
+    .then((res) => {
+      if (
+        typeof res === "object" &&
+        res !== null &&
+        "data" in res &&
+        Array.isArray(res.data)
+      ) {
           setDepartments(res.data);
           if (res.data.length > 0) {
             setRegDepartmentId(res.data[0].id);
