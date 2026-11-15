@@ -40,3 +40,6 @@ jobs:
 
       - name: Validate Cloudflare Worker bundle
         run: bunx wrangler deploy --dry-run
+
+      - name: Validate Staging Worker bundle
+        run: bunx wrangler deploy --env staging --dry-run
