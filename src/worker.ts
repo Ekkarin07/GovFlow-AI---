@@ -4,9 +4,16 @@ import {
   getSessionUser
 } from "./server/auth";
 
+import { handleLogin } from "./server/login";
+
 interface Env {
   DB: D1Database;
   ASSETS: Fetcher;
+}
+interface Env {
+  DB: D1Database;
+  ASSETS: Fetcher;
+  LOGIN_RATE_LIMITER: RateLimit;
 }
 
 export default {
