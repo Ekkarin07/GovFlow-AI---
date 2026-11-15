@@ -6,7 +6,6 @@ import {
 
 import { handleLogin } from "./server/login";
 
-}
 interface Env {
   DB: D1Database;
   ASSETS: Fetcher;
