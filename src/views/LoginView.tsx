@@ -66,28 +66,68 @@ export const LoginView: React.FC<LoginViewProps> = ({
   }, []);
 
   // Email & Password login submit
+
+  // Email & Password login using HttpOnly session cookie
   const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password.trim()) {
-      setErrorMessage('กรุณากรอกทั้งอีเมลและรหัสผ่าน');
+
+    if (!email.trim() || !password) {
+      setErrorMessage('กรุณากรอกอีเมลและรหัสผ่าน');
       return;
     }
+
     setLoading(true);
     setErrorMessage(null);
 
     try {
       const res = await fetch('/api/v1/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), password: password.trim() }),
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          password
+        })
       });
+
       const data = await res.json();
+
       if (!res.ok) {
-        throw new Error(data.error?.messageTh || 'การเข้าสู่ระบบไม่สำเร็จ');
+        throw new Error(
+          typeof data.error === 'string'
+            ? data.error
+            : data.error?.messageTh || 'เข้าสู่ระบบไม่สำเร็จ'
+        );
       }
-      onLoginSuccess(data.data.user, data.data.token);
+
+      const meRes = await fetch('/api/v1/me', {
+        credentials: 'same-origin',
+        cache: 'no-store'
+      });
+
+      if (!meRes.ok) {
+        throw new Error('ไม่สามารถตรวจสอบ Session ได้');
+      }
+
+      const meData = await meRes.json();
+      const user = meData.user;
+
+      if (!user?.id) {
+        throw new Error('ไม่พบข้อมูลผู้ใช้');
+      }
+
+      setPassword('');
+
+      onLoginSuccess({
+        ...user,
+        displayName: user.display_name ?? user.displayName
+      }, '');
     } catch (err: any) {
-      setErrorMessage(err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+      setErrorMessage(
+        err.message || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ'
+      );
     } finally {
       setLoading(false);
     }
