@@ -83,10 +83,21 @@ export default function App() {
           fetch('/api/v1/audit').then((r) => r.json()),
         ]);
 
-      if (meRes.data) {
-        setCurrentUser(meRes.data.user);
-        setAllUsers(meRes.data.allUsers);
+       // Read the authenticated user from Cloudflare session
+      if (meRes.user) {
+        setCurrentUser({
+          ...meRes.user,
+          displayName: meRes.user.display_name ?? meRes.user.displayName,
+        } as UserProfile);
+      }
+
+      // Support organization data when its API is available
+      if (meRes.data?.organization) {
         setOrganization(meRes.data.organization);
+      }
+
+      if (Array.isArray(meRes.data?.allUsers)) {
+        setAllUsers(meRes.data.allUsers);
       }
       if (casesRes.data) setCases(casesRes.data);
       if (docsRes.data) setDocuments(docsRes.data);
