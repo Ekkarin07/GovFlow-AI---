@@ -1,7 +1,9 @@
 
 import {
   readSessionCookie,
-  getSessionUser
+  getSessionUser,
+  revokeSession,
+  clearSessionCookie
 } from "./server/auth";
 
 import { handleLogin } from "./server/login";
@@ -38,6 +40,39 @@ export default {
       return handleLogin(request,
         env.DB,
         env.LOGIN_RATE_LIMITER
+      );
+    }
+
+    // Logout API
+    if (url.pathname === "/api/v1/auth/logout") {
+      if (request.method !== "POST") {
+        return Response.json(
+          { error: "Method not allowed" },
+          { status: 405 }
+        );
+      }
+
+      const origin = request.headers.get("Origin");
+      if (origin !== url.origin) {
+        return Response.json(
+          { error: "Forbidden" },
+          { status: 403 }
+        );
+      }
+
+      const token = readSessionCookie(request);
+      if (token) {
+        await revokeSession(env.DB, token);
+      }
+
+      return Response.json(
+        { success: true },
+        {
+          headers: {
+            "Cache-Control": "no-store",
+            "Set-Cookie": clearSessionCookie()
+          }
+        }
       );
     }
 
