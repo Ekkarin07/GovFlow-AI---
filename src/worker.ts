@@ -35,7 +35,7 @@ export default {
 
     // Login API
     if (url.pathname === "/api/v1/auth/login") {
-      return handleLogin(request, env.DB);
+      return handleLogin(equest, env.DB, env.LOGIN_RATE_LIMITER);
     }
 
     // Check authenticated user
